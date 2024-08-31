@@ -1,0 +1,13 @@
+{
+    "files.associations": {
+        "types.h": "c",
+        "ioctl.h": "c",
+        "parse_args.h": "c",
+        "packet.h": "c",
+        "memory": "cpp",
+        "type_traits": "cpp",
+        "cmath": "cpp",
+        "limits": "cpp",
+        "header.h": "c"
+    }
+}
