@@ -1,153 +1,5 @@
 #include "header.h"
 
-uint32_t get_source_ip_address()
-{
-    struct ifaddrs *ifaddr, *ifa;
-    int family, s;
-    char host[NI_MAXHOST];
-    uint32_t ip_address = 0;
-
-    if (getifaddrs(&ifaddr) == -1)
-    {
-        perror("getifaddrs");
-        exit(EXIT_FAILURE);
-    }
-
-    // Iterate through all network interfaces
-    for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next)
-    {
-        if (ifa->ifa_addr == NULL)
-            continue;
-
-        family = ifa->ifa_addr->sa_family;
-
-        // Find an IPv4 address
-        if (family == AF_INET)
-        {
-            s = getnameinfo(ifa->ifa_addr, sizeof(struct sockaddr_in),
-                            host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
-            if (s != 0)
-            {
-                printf("getnameinfo() failed: %s\n", gai_strerror(s));
-                exit(EXIT_FAILURE);
-            }
-
-            // Get the first non-loopback IPv4 address
-            if (strcmp(ifa->ifa_name, "lo") != 0)
-            {
-                ip_address = ((struct sockaddr_in *)ifa->ifa_addr)->sin_addr.s_addr;
-                break;
-            }
-        }
-    }
-
-    freeifaddrs(ifaddr);
-
-    if (ip_address == 0)
-    {
-        fprintf(stderr, "Could not determine local IP address\n");
-        exit(EXIT_FAILURE);
-    }
-
-    return ip_address;
-}
-
-unsigned char *find_src_mac_addr(int sockfd)
-{
-    struct ifreq ifr;
-    struct ifconf ifc;
-    char buffer[1024];
-
-    ifc.ifc_len = sizeof(buffer);
-    ifc.ifc_buf = buffer;
-    if (ioctl(sockfd, SIOCGIFCONF, &ifc) == -1)
-    {
-        perror("ioctl");
-        return NULL;
-    }
-
-    struct ifreq *it = ifc.ifc_req;
-    const struct ifreq *const end = it + (ifc.ifc_len / sizeof(struct ifreq));
-
-    for (; it != end; ++it)
-    {
-        strcpy(ifr.ifr_name, it->ifr_name);
-        if (ioctl(sockfd, SIOCGIFFLAGS, &ifr) == 0)
-        {
-            if (!(ifr.ifr_flags & IFF_LOOPBACK))
-            {
-                if (ioctl(sockfd, SIOCGIFHWADDR, &ifr) == 0)
-                {
-                    unsigned char *mac = (unsigned char *)ifr.ifr_hwaddr.sa_data;
-                    return mac;
-                }
-            }
-        }
-        else
-        {
-            perror("ioctl");
-        }
-    }
-
-    return NULL;
-}
-
-int get_network_interface_index(int sockfd)
-{
-    struct ifreq ifr;
-    struct ifconf ifc;
-    char buf[1024];
-    struct ifreq *it;
-    struct ifreq *end;
-
-    ifc.ifc_len = sizeof(buf);
-    ifc.ifc_buf = buf;
-    if (ioctl(sockfd, SIOCGIFCONF, &ifc) == -1)
-    {
-        perror("ioctl SIOCGIFCONF");
-        return -1;
-    }
-
-    it = ifc.ifc_req;
-    end = it + (ifc.ifc_len / sizeof(struct ifreq));
-
-    for (; it != end; ++it)
-    {
-        strcpy(ifr.ifr_name, it->ifr_name);
-        if (ioctl(sockfd, SIOCGIFFLAGS, &ifr) == 0)
-        {
-            if (!(ifr.ifr_flags & IFF_LOOPBACK))
-            {
-                return if_nametoindex(it->ifr_name);
-            }
-        }
-        else
-        {
-            perror("ioctl SIOCGIFFLAGS");
-        }
-    }
-
-    fprintf(stderr, "No suitable network interface found.\n");
-    return -1;
-}
-
-unsigned short calculate_checksum(void *buffer, int length)
-{
-    unsigned short *data = buffer;
-    unsigned long sum = 0;
-    for (sum = 0; length > 1; length -= 2)
-    {
-        sum += *data++;
-    }
-    if (length == 1)
-    {
-        sum += *(unsigned char *)data;
-    }
-    sum = (sum >> 16) + (sum & 0xFFFF);
-    sum += (sum >> 16);
-    return (unsigned short)(~sum);
-}
-
 int create_socket(const char *ip_addr, t_ping_result *result)
 {
     int sockFd;
@@ -164,8 +16,11 @@ int create_socket(const char *ip_addr, t_ping_result *result)
     double elapsed_time;
     fd_set read_fds;
     struct timeval timeout;
-    const char *payload = "Hello, this is a custom payload!";
+    const char *payload = "abcdefghijklmnopqrstuvwabcdefghiabcdefghij123456789*-.!+";
     int payload_size = strlen(payload);
+    uint32_t network_interface_index;
+
+    network_interface_index = 0;
 
     // Create a raw socket
     sockFd = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
@@ -175,11 +30,22 @@ int create_socket(const char *ip_addr, t_ping_result *result)
         return 1;
     }
 
+    network_interface_index = get_network_interface_index(sockFd);
+
     // Find source MAC address
     unsigned char *src_mac = find_src_mac_addr(sockFd);
     if (src_mac == NULL)
     {
         fprintf(stderr, "Source MAC address not found.\n");
+        close(sockFd);
+        return 1;
+    }
+
+    printf("network_interface_index %d \n", network_interface_index);
+    unsigned char *dest_mac = resolve_mac_address(ip_addr, sockFd, network_interface_index);
+    if (dest_mac == NULL)
+    {
+        fprintf(stderr, "Failed to resolve destination MAC address.\n");
         close(sockFd);
         return 1;
     }
@@ -199,7 +65,9 @@ int create_socket(const char *ip_addr, t_ping_result *result)
 
     // Setup Ethernet header
     memcpy(ethHdr->src_mac, src_mac, 6);
-    memcpy(ethHdr->dest_mac, "\xff\xff\xff\xff\xff\xff", 6); // Broadcast
+    memcpy(ethHdr->dest_mac, dest_mac, 6); 
+    // memcpy(ethHdr->dest_mac, "\xff\xff\xff\xff\xff\xff", 6);
+
     ethHdr->eth_type = htons(ETH_P_IP);
 
     // Setup IP header
@@ -216,7 +84,7 @@ int create_socket(const char *ip_addr, t_ping_result *result)
     ipHeader->daddr = inet_addr(ip_addr);
 
     // Calculate IP header checksum
-    ipHeader->check = calculate_checksum((unsigned short *)ipHeader, sizeof(struct iphdr));
+    ipHeader->check = checksum((unsigned short *)ipHeader, sizeof(struct iphdr));
 
     // Setup ICMP header
     icmpHeader->type = ICMP_ECHO;
@@ -231,11 +99,11 @@ int create_socket(const char *ip_addr, t_ping_result *result)
     }
 
     // Calculate ICMP checksum
-    icmpHeader->checksum = calculate_checksum((unsigned short *)icmpHeader, sizeof(struct icmphdr) + payload_size);
+    icmpHeader->checksum = checksum((unsigned short *)icmpHeader, sizeof(struct icmphdr) + payload_size);
 
     // Setup destination address
     memset(&target_addr, 0, sizeof(target_addr));
-    target_addr.sll_ifindex = get_network_interface_index(sockFd);
+    target_addr.sll_ifindex = network_interface_index;
     target_addr.sll_halen = ETH_ALEN;
     memcpy(target_addr.sll_addr, ethHdr->dest_mac, ETH_ALEN);
 

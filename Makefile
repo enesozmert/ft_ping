@@ -40,5 +40,32 @@ fclean: clean
 # Rebuild everything
 re: fclean all
 
+run: $(NAME)
+	@if [ -z "$(ARGS)" ]; then \
+		if [ "$(SUDO)" = "1" ]; then \
+			echo "Running $(NAME) with sudo without arguments."; \
+			sudo $(NAME); \
+		else \
+			echo "Running $(NAME) without arguments."; \
+			$(NAME); \
+		fi \
+	else \
+		if [ "$(SUDO)" = "1" ]; then \
+			echo "Running $(NAME) with sudo and arguments: $(ARGS)"; \
+			sudo $(NAME) $(ARGS); \
+		else \
+			echo "Running $(NAME) with arguments: $(ARGS)"; \
+			$(NAME) $(ARGS); \
+		fi \
+	fi
+
+run_dir:
+	@echo "Changing directory to $(OUTDIR) and opening shell there."
+	@cd $(OUTDIR) && bash
+
+ARGS ?= ""
+SUDO ?= 0
+
+
 # Phony targets to avoid conflicts with files named as the targets
-.PHONY: all clean fclean re
+.PHONY: all clean fclean re run run_dir

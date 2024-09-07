@@ -14,12 +14,18 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Usage: %s [-v] [-?] <hostname>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
-    const char *ip_addr = argv[optind];
+    const char *hostname = argv[optind];
+    char ip_addr[INET_ADDRSTRLEN];
+
+    // Resolve hostname
+    if (resolve_hostname(hostname, ip_addr, sizeof(ip_addr)) != 0) {
+        return 1;
+    }
 
     // Start ping process
     if (create_socket(ip_addr, &result) != 0)
     {
-        fprintf(stderr, "Ping request failed.\n");
+        fprintf(stderr, "ft_ping: Ping request failed.\n");
         return 1;
     }
 
