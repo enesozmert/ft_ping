@@ -11,6 +11,20 @@ int create_socket(t_ping *ping)
         return 1;
     }
 
+    int result3 = get_network_interface_name(ping);
+    if (result3 == -1) {
+        perror("Failed to get_network_interface_name");
+        free(ping);
+        return 1;
+    }
+
+    int result4 = get_network_interface_index(ping);
+    if (result4 == -1) {
+        perror("Failed to get_network_interface_name");
+        free(ping);
+        return 1;
+    }
+
     int result1 = get_network_default_gateway(ping);
     if (result1 == -1) {
         perror("Failed to get default gateway");
@@ -25,20 +39,6 @@ int create_socket(t_ping *ping)
         perror("Failed to get_network_gateway_mac_address");
         free(ping->ifreq);
         close(ping->sock_fd);
-        free(ping);
-        return 1;
-    }
-
-    int result3 = get_network_interface_name(ping);
-    if (result3 == -1) {
-        perror("Failed to get_network_interface_name");
-        free(ping);
-        return 1;
-    }
-
-    int result4 = get_network_interface_index(ping);
-    if (result4 == -1) {
-        perror("Failed to get_network_interface_name");
         free(ping);
         return 1;
     }
@@ -76,7 +76,8 @@ int create_socket(t_ping *ping)
     {
         printf("Waiting for ping reply...\n");
         unsigned char recvBuff[1024];
-        ssize_t len = recvfrom(ping->sock_fd, &recvBuff, sizeof(recvBuff), 0, NULL, NULL);
+        socklen_t addr_len = sizeof(*(ping->target_addr));
+        ssize_t len = recvfrom(ping->sock_fd, &recvBuff, sizeof(recvBuff), 0, (struct sockaddr *)ping->target_addr, &addr_len);
         if (len <= 0)
         {
             perror("Recvfrom error");
@@ -93,7 +94,7 @@ int create_socket(t_ping *ping)
                 ping->time.elapsed_time = (ping->time.end_time.tv_sec - ping->time.start_time.tv_sec) * 1000.0;
                 ping->time.elapsed_time += (ping->time.end_time.tv_usec - ping->time.start_time.tv_usec) / 1000.0;
                 ping->result->rtt += ping->time.elapsed_time;
-                printf("%zd bytes from %s: icmp_seq=%d ttl=%d time=%.2f ms\n", len, ping->ip_addr, ntohs(recv_icmp_hdr->un.echo.sequence), recv_ip_hdr->ttl, ping->time.elapsed_time);
+                printf("%zd bytes from %s: icmp_seq=%d ttl=%d time=%.2f ms\n", len, ping->dest_ip_addr, ntohs(recv_icmp_hdr->un.echo.sequence), recv_ip_hdr->ttl, ping->time.elapsed_time);
             // }
         }
     }

@@ -7,6 +7,7 @@ void run_ping_create_functions(t_ping *ping, ping_create_func_t funcs[], int num
             printf("Fonksiyon %d başarılı.\n", i + 1);
         } else {
             printf("Fonksiyon %d başarısız.\n", i + 1);
+            exit(-1);
         }
     }
 }

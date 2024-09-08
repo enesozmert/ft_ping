@@ -18,6 +18,13 @@ int main(int argc, char *argv[])
         return 0;
     }
 
+    ping->target_addr = (struct sockaddr_ll *)malloc(sizeof(struct sockaddr_ll));
+    if (!ping->target_addr)
+    {
+        perror("Memory Allocation Error for target_addr!");
+        exit(1); // Hata durumunda çıkış yapmadan önce programdaki dinamik bellekler serbest bırakılmalı
+    }
+
     ping->ifreq = (struct ifreq *)malloc(sizeof(struct ifreq));
     if (!ping->ifreq) {
         perror("Failed to allocate memory for ifreq");
@@ -44,9 +51,9 @@ int main(int argc, char *argv[])
     }
 
     ping->sock_fd = 0;
-    ping->ip_addr = ip_addr;
-    ping->hostname = hostname;
-    ping->source_ip_addr = get_source_ip_address();
+    ping->dest_ip_addr = ip_addr;
+    ping->dest_hostname = hostname;
+    ping->src_ip_addr = get_source_ip_address();
 
     // Start ping process
     if (create_socket(ping) != 0)
@@ -56,7 +63,7 @@ int main(int argc, char *argv[])
     }
 
     // Display results
-    printf("\n--- %s ping statistics ---\n", ping->ip_addr);
+    printf("\n--- %s ping statistics ---\n", ping->dest_ip_addr);
     printf("%d packets transmitted, %d received, %.2f%% packet loss, time %.2fms\n",
            ping->result->sent_packets, ping->result->received_packets,
            ((ping->result->sent_packets - ping->result->received_packets) / (double)ping->result->sent_packets) * 100,

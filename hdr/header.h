@@ -64,9 +64,9 @@ typedef struct s_ping_result
 typedef struct s_ping{
     int sock_fd;
     fd_set read_fds;
-    char *ip_addr;
-    char *hostname;
-    uint32_t source_ip_addr;
+    char *dest_ip_addr;
+    char *dest_hostname;
+    uint32_t src_ip_addr;
     struct iphdr *ip_header;
     struct icmphdr *icmp_header;
     char *network_interface_name;
@@ -74,7 +74,7 @@ typedef struct s_ping{
     unsigned char *dest_mac;
     unsigned char *gateway_mac;
     char *gateway_ip;
-    struct sockaddr_ll target_addr;
+    struct sockaddr_ll *target_addr;
     struct ifreq *ifreq;
     t_ethernet_frame *ethernet_frame;
     t_icmp_reply icmp_reply;

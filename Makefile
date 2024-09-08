@@ -38,7 +38,7 @@ fclean: clean
 	rm -f $(NAME)
 
 # Rebuild everything
-re: fclean all
+re: fclean all output_dir
 
 run: $(NAME)
 	@if [ -z "$(ARGS)" ]; then \

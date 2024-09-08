@@ -13,8 +13,8 @@ int create_ip_header(t_ping *ping){
     ping->ip_header->ttl = 64;
     ping->ip_header->protocol = IPPROTO_ICMP;
     ping->ip_header->check = 0;
-    ping->ip_header->saddr = inet_addr(ping->hostname);
-    ping->ip_header->daddr = inet_addr(ping->ip_addr);
+    ping->ip_header->saddr = ping->src_ip_addr;
+    ping->ip_header->daddr = inet_addr(ping->dest_ip_addr);
     ping->ip_header->check = checksum((unsigned short *)ping->ip_header, sizeof(struct iphdr));
     return 1;
 }
