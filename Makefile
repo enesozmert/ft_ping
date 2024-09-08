@@ -59,7 +59,7 @@ run: $(NAME)
 		fi \
 	fi
 
-run_dir:
+output_dir:
 	@echo "Changing directory to $(OUTDIR) and opening shell there."
 	@cd $(OUTDIR) && bash
 
@@ -68,4 +68,4 @@ SUDO ?= 0
 
 
 # Phony targets to avoid conflicts with files named as the targets
-.PHONY: all clean fclean re run run_dir
+.PHONY: all clean fclean re run output_dir

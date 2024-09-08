@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -18,6 +19,7 @@
 #include <sys/ioctl.h>
 #include <linux/if_arp.h>
 #include <sys/select.h>
+#include <netdb.h>
 
 typedef struct s_ethernet_frame
 {
@@ -34,6 +36,24 @@ typedef struct s_icmp_reply
     unsigned char payload[64];
 } t_icmp_reply;
 
+typedef struct s_payload{
+    char *payload;
+    int payload_size;
+} t_payload;
+
+typedef struct s_packet{
+    unsigned char *packet;
+    int icmp_packet_size;
+    int packet_len;
+} t_packet;
+
+typedef struct s_time{
+    struct timeval start_time;
+    struct timeval end_time;
+    struct timeval timeout;
+    double elapsed_time;
+} t_time;
+
 typedef struct s_ping_result
 {
     int sent_packets;
@@ -41,29 +61,57 @@ typedef struct s_ping_result
     double rtt;
 } t_ping_result;
 
-#define ARP_REQUEST 1
-#define ARP_REPLY 2
+typedef struct s_ping{
+    int sock_fd;
+    fd_set read_fds;
+    char *ip_addr;
+    char *hostname;
+    uint32_t source_ip_addr;
+    struct iphdr *ip_header;
+    struct icmphdr *icmp_header;
+    char *network_interface_name;
+    unsigned char *src_mac;
+    unsigned char *dest_mac;
+    unsigned char *gateway_mac;
+    char *gateway_ip;
+    struct sockaddr_ll target_addr;
+    struct ifreq *ifreq;
+    t_ethernet_frame *ethernet_frame;
+    t_icmp_reply icmp_reply;
+    t_payload payload;
+    t_packet packet;
+    t_time time;
+    t_ping_result *result;
+} t_ping;
 
-struct arp_header {
-    unsigned short hardware_type;
-    unsigned short protocol_type;
-    unsigned char hardware_len;
-    unsigned char protocol_len;
-    unsigned short opcode;
-    unsigned char sender_mac[6];
-    unsigned char sender_ip[4];
-    unsigned char target_mac[6];
-    unsigned char target_ip[4];
-};
+typedef int (*ping_create_func_t)(t_ping *);
 
 int resolve_hostname(const char *hostname, char *ip_str, size_t ip_str_len);
 
+int create_raw_socket(t_ping *ping);
+int create_packet(t_ping *ping);
+int create_payload(t_ping *ping);
+int create_socket(t_ping *ping);
 
-int create_socket(const char *ip_addr, t_ping_result *result);
+int create_icmp_header(t_ping *ping);
+int create_ip_header(t_ping *ping);
+
+int create_ethernet_frame(t_ping *ping);
+
+int create_sockaddr(t_ping *ping);
+
+int create_send_request(t_ping *ping);
+
+ping_create_func_t *ping_create_functions();
+void run_ping_create_functions(t_ping *ping, ping_create_func_t funcs[], int num_funcs);
+
 unsigned short checksum(void *buffer, int length);
-int get_network_interface_index(int sockfd);
 void parse_args(int argc, char *argv[], int *verbose_flag);
 
-int get_interface_ip_by_id(unsigned int interface_id, char *ip_address, size_t size);
 uint32_t get_source_ip_address();
 unsigned char *find_src_mac_addr(int sockfd);
+
+int get_network_interface_index(t_ping *ping);
+int get_network_interface_name(t_ping *ping);
+int get_network_gateway_mac_address(t_ping *ping);
+int get_network_default_gateway(t_ping *ping);

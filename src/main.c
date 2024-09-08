@@ -2,8 +2,29 @@
 
 int main(int argc, char *argv[])
 {
+    t_ping *ping;
     int verbose_flag = 0;
-    t_ping_result result = {0, 0, 0.0};
+
+    ping = malloc(sizeof(t_ping));
+    if (!ping) {
+        perror("Failed to allocate memory for t_ping");
+        return 0;
+    }
+
+    ping->result = malloc(sizeof(t_ping_result));
+    if (!ping->result) {
+        perror("Failed to allocate memory for t_ping_result");
+        free(ping); // Ayırılan belleği serbest bırakıyoruz
+        return 0;
+    }
+
+    ping->ifreq = (struct ifreq *)malloc(sizeof(struct ifreq));
+    if (!ping->ifreq) {
+        perror("Failed to allocate memory for ifreq");
+        close(ping->sock_fd);
+        free(ping);
+        return 1;
+    }
 
     // Parse command line arguments
     parse_args(argc, argv, &verbose_flag);
@@ -14,7 +35,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Usage: %s [-v] [-?] <hostname>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
-    const char *hostname = argv[optind];
+    char *hostname = argv[optind];
     char ip_addr[INET_ADDRSTRLEN];
 
     // Resolve hostname
@@ -22,19 +43,24 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    ping->sock_fd = 0;
+    ping->ip_addr = ip_addr;
+    ping->hostname = hostname;
+    ping->source_ip_addr = get_source_ip_address();
+
     // Start ping process
-    if (create_socket(ip_addr, &result) != 0)
+    if (create_socket(ping) != 0)
     {
         fprintf(stderr, "ft_ping: Ping request failed.\n");
         return 1;
     }
 
     // Display results
-    printf("\n--- %s ping statistics ---\n", ip_addr);
+    printf("\n--- %s ping statistics ---\n", ping->ip_addr);
     printf("%d packets transmitted, %d received, %.2f%% packet loss, time %.2fms\n",
-           result.sent_packets, result.received_packets,
-           ((result.sent_packets - result.received_packets) / (double)result.sent_packets) * 100,
-           result.rtt);
+           ping->result->sent_packets, ping->result->received_packets,
+           ((ping->result->sent_packets - ping->result->received_packets) / (double)ping->result->sent_packets) * 100,
+           ping->result->rtt);
 
     return 0;
 }
