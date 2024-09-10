@@ -37,7 +37,7 @@ typedef struct s_icmp_reply
 } t_icmp_reply;
 
 typedef struct s_payload{
-    char *payload;
+    const char *payload;
     int payload_size;
 } t_payload;
 
@@ -78,7 +78,7 @@ typedef struct s_ping{
     struct ifreq *ifreq;
     t_ethernet_frame *ethernet_frame;
     t_icmp_reply icmp_reply;
-    t_payload payload;
+    t_payload *payload;
     t_packet packet;
     t_time time;
     t_ping_result *result;

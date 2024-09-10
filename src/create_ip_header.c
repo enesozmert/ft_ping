@@ -7,7 +7,7 @@ int create_ip_header(t_ping *ping){
     ping->ip_header->version = 4;
     ping->ip_header->ihl = 5;
     ping->ip_header->tos = 0;
-    ping->ip_header->tot_len = htons(sizeof(struct iphdr) + sizeof(struct icmphdr) + ping->payload.payload_size);
+    ping->ip_header->tot_len = htons(sizeof(struct iphdr) + sizeof(struct icmphdr) + ping->payload->payload_size);
     ping->ip_header->id = htons(getpid() & 0xFFFF);
     ping->ip_header->frag_off = htons(0);
     ping->ip_header->ttl = 64;

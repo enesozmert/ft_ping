@@ -33,6 +33,14 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    ping->payload = (t_payload *)malloc(sizeof(t_payload));
+    if (!ping->payload) {
+        perror("Failed to allocate memory for t_payload");
+        close(ping->sock_fd);
+        free(ping);
+        return 1;
+    }
+
     // Parse command line arguments
     parse_args(argc, argv, &verbose_flag);
 
