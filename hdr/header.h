@@ -37,7 +37,7 @@ typedef struct s_icmp_reply
 } t_icmp_reply;
 
 typedef struct s_payload{
-    const char *payload;
+    char *payload;
     int payload_size;
 } t_payload;
 

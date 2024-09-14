@@ -14,7 +14,7 @@ SRCS = $(wildcard $(SRCDIR)/*.c)
 OBJS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(SRCS))
 
 # Default rule to compile everything
-all: $(NAME)
+all: $(NAME) output_dir
 
 # Linking object files to create the final executable
 $(NAME): $(OBJS)
