@@ -8,6 +8,8 @@
         "type_traits": "cpp",
         "cmath": "cpp",
         "limits": "cpp",
-        "header.h": "c"
+        "header.h": "c",
+        "stdio.h": "c",
+        "ethernet.h": "c"
     }
 }

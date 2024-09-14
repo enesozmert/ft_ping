@@ -2,19 +2,16 @@
 
 int create_payload(t_ping *ping){
 
-    const char* data = "enes ozmert 1121092387432784732894783279";
+    const char* data = "ft_ping-1453-1453-1453-1453-1453-1453-1453-1453--ft_ping";
     uint32_t length = strlen(data);
-    
-    // Bellek tahsisi yapılıyor ve boyut set ediliyor
-    ping->payload->payload = (char *)malloc(length + 1);  // Null terminator için ekstra yer
+
+    ping->payload->payload = (char *)malloc(length + 1);
     if (ping->payload->payload == NULL) {
-        return -1; // Bellek tahsisi başarısızsa hata döndür
+        return -1;
     }
 
-    memcpy(ping->payload->payload, data, length + 1); // Null terminator dahil kopyalama
+    memcpy(ping->payload->payload, data, length + 1);
     ping->payload->payload_size = length;
-
-
 
     return 1;
 }

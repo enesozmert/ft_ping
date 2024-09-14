@@ -1,6 +1,6 @@
 #include "header.h"
 
-unsigned char *find_src_mac_addr(int sockfd)
+int get_network_src_mac_addr(t_ping *ping)
 {
     struct ifreq ifr;
     struct ifconf ifc;
@@ -8,10 +8,10 @@ unsigned char *find_src_mac_addr(int sockfd)
 
     ifc.ifc_len = sizeof(buffer);
     ifc.ifc_buf = buffer;
-    if (ioctl(sockfd, SIOCGIFCONF, &ifc) == -1)
+    if (ioctl(ping->sock_fd, SIOCGIFCONF, &ifc) == -1)
     {
         perror("ioctl");
-        return NULL;
+        return -1;
     }
 
     struct ifreq *it = ifc.ifc_req;
@@ -20,14 +20,15 @@ unsigned char *find_src_mac_addr(int sockfd)
     for (; it != end; ++it)
     {
         strcpy(ifr.ifr_name, it->ifr_name);
-        if (ioctl(sockfd, SIOCGIFFLAGS, &ifr) == 0)
+        if (ioctl(ping->sock_fd, SIOCGIFFLAGS, &ifr) == 0)
         {
             if (!(ifr.ifr_flags & IFF_LOOPBACK))
             {
-                if (ioctl(sockfd, SIOCGIFHWADDR, &ifr) == 0)
+                if (ioctl(ping->sock_fd, SIOCGIFHWADDR, &ifr) == 0)
                 {
-                    unsigned char *mac = (unsigned char *)ifr.ifr_hwaddr.sa_data;
-                    return mac;
+                    ping->src_mac = malloc(strlen(ifr.ifr_hwaddr.sa_data));
+                    memcpy(ping->src_mac, (unsigned char *)ifr.ifr_hwaddr.sa_data, 6);
+                    return 1;
                 }
             }
         }
@@ -37,5 +38,5 @@ unsigned char *find_src_mac_addr(int sockfd)
         }
     }
 
-    return NULL;
+    return -1;
 }

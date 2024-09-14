@@ -1,6 +1,6 @@
 #include "header.h"
 
-uint32_t get_source_ip_address()
+int get_network_source_ip_address(t_ping *ping)
 {
     struct ifaddrs *ifaddr, *ifa;
     int family, s;
@@ -10,7 +10,8 @@ uint32_t get_source_ip_address()
     if (getifaddrs(&ifaddr) == -1)
     {
         perror("getifaddrs");
-        exit(EXIT_FAILURE);
+        return -1;
+        // exit(EXIT_FAILURE);
     }
 
     // Iterate through all network interfaces
@@ -29,7 +30,8 @@ uint32_t get_source_ip_address()
             if (s != 0)
             {
                 printf("getnameinfo() failed: %s\n", gai_strerror(s));
-                exit(EXIT_FAILURE);
+                return -1;
+                // exit(EXIT_FAILURE);
             }
 
             // Get the first non-loopback IPv4 address
@@ -46,8 +48,9 @@ uint32_t get_source_ip_address()
     if (ip_address == 0)
     {
         fprintf(stderr, "Could not determine local IP address\n");
-        exit(EXIT_FAILURE);
+        return -1;
+        // exit(EXIT_FAILURE);
     }
-
-    return ip_address;
+    ping->src_ip_addr = ip_address;
+    return 1;
 }

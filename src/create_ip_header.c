@@ -1,7 +1,7 @@
 #include "header.h"
 
 int create_ip_header(t_ping *ping){
-    ping->ip_header = (struct iphdr *)(ping->packet.packet + sizeof(t_ethernet_frame));
+    ping->ip_header = (struct iphdr *)(ping->packet->packet + sizeof(t_ethernet_frame));
 
     // Setup IP header
     ping->ip_header->version = 4;

@@ -1,7 +1,7 @@
 #include "header.h"
 
 int create_ethernet_frame(t_ping *ping){
-    ping->ethernet_frame = (t_ethernet_frame *)ping->packet.packet;
+    ping->ethernet_frame = (t_ethernet_frame *)ping->packet->packet;
 
     // Setup Ethernet Frame header
     memcpy(ping->ethernet_frame->src_mac, ping->src_mac, 6);

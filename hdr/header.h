@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <signal.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -79,12 +80,23 @@ typedef struct s_ping{
     t_ethernet_frame *ethernet_frame;
     t_icmp_reply icmp_reply;
     t_payload *payload;
-    t_packet packet;
+    t_packet *packet;
     t_time time;
     t_ping_result *result;
 } t_ping;
 
+extern t_ping *g_ping;
 typedef int (*ping_create_func_t)(t_ping *);
+
+typedef struct s_ping_func_entry {
+    ping_create_func_t func;  // Fonksiyon işaretçisi
+    const char *func_name;    // Fonksiyon adı
+} t_ping_func_entry;
+
+// Makro: Fonksiyon ve adını aynı anda ekler
+#define FUNC_ENTRY(func) {func, #func}
+
+int ping_create_allocates(t_ping **ping);
 
 int resolve_hostname(const char *hostname, char *ip_str, size_t ip_str_len);
 
@@ -102,16 +114,21 @@ int create_sockaddr(t_ping *ping);
 
 int create_send_request(t_ping *ping);
 
-ping_create_func_t *ping_create_functions();
-void run_ping_create_functions(t_ping *ping, ping_create_func_t funcs[], int num_funcs);
+int create_socket_select(t_ping *ping);
+
+int create_socket_recvfrom(t_ping *ping);
+
+t_ping_func_entry *ping_create_functions(void);
+void run_ping_create_functions(t_ping *ping, t_ping_func_entry *funcs, int num_funcs);
 
 unsigned short checksum(void *buffer, int length);
 void parse_args(int argc, char *argv[], int *verbose_flag);
 
-uint32_t get_source_ip_address();
-unsigned char *find_src_mac_addr(int sockfd);
-
+int get_network_src_mac_addr(t_ping *ping);
+int get_network_source_ip_address(t_ping *ping);
 int get_network_interface_index(t_ping *ping);
 int get_network_interface_name(t_ping *ping);
 int get_network_gateway_mac_address(t_ping *ping);
 int get_network_default_gateway(t_ping *ping);
+
+void interrupt_handler(int sig);
