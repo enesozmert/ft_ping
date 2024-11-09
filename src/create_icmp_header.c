@@ -1,7 +1,7 @@
 #include "header.h"
 
 int create_icmp_header(t_ping *ping){
-    ping->icmp_header = (struct icmphdr *)(ping->packet->packet + sizeof(t_ethernet_frame) + sizeof(struct iphdr));
+    ping->icmp_header = (struct icmphdr *)(ping->packet->packet + sizeof(struct iphdr) + sizeof(t_ethernet_frame));
 
     if (ping->icmp_header == NULL) {
         free(ping->payload->payload);
