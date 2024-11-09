@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  ft_ping:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ft_ping_container
+    stdin_open: true  # Keep STDIN open for interactive shell
+    tty: true         # Allocate a pseudo-TTY for terminal support
+    ports:
+      - "2222:22"     # Maps port 2222 on the host to port 22 in the container
+    volumes:
+      - .:/usr/src/ft_ping  # Mount local project directory
+    networks:
+      - ft_ping_net
+
+networks:
+  ft_ping_net:
+    driver: bridge
