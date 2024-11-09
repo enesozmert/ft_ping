@@ -10,6 +10,6 @@ int create_ethernet_frame(t_ping *ping){
            ping->gateway_mac[0], ping->gateway_mac[1], ping->gateway_mac[2], ping->gateway_mac[3], ping->gateway_mac[4], ping->gateway_mac[5]);
     memcpy(ping->ethernet_frame->dest_mac, ping->gateway_mac, 6);
     // memcpy(ping->ethernet_frame->dest_mac, "\xff\xff\xff\xff\xff\xff", 6);
-    ping->ethernet_frame->eth_type = htons(ETH_P_IP);
+    ping->ethernet_frame->eth_type = htons(ETH_P_IP); // 0x0800 = IP protokolü
     return 1;
 }

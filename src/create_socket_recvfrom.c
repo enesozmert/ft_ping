@@ -14,8 +14,8 @@ int create_socket_recvfrom(t_ping *ping)
     }
     else
     {
-        struct iphdr *recv_ip_hdr = (struct iphdr *)(recvBuff + sizeof(t_ethernet_frame));
-        struct icmphdr *recv_icmp_hdr = (struct icmphdr *)(recvBuff + sizeof(t_ethernet_frame) + (recv_ip_hdr->ihl * 4));
+        struct iphdr *recv_ip_hdr = (struct iphdr *)(recvBuff);
+        struct icmphdr *recv_icmp_hdr = (struct icmphdr *)(recvBuff + (recv_ip_hdr->ihl * 4));
 
         printf("recv_icmp_hdr->type %d .\n", recv_icmp_hdr->type);
         printf("ICMP_ECHOREPLY %d .\n", ICMP_ECHOREPLY);
