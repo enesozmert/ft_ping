@@ -2,3 +2,4 @@ docker-compose up --build -d
 docker ps
 ssh root@localhost -p 2222
 docker-compose down
+ssh-keygen -R "[localhost]:2222"

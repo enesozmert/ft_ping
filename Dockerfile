@@ -3,7 +3,7 @@ FROM ubuntu:latest
 
 # Install essential packages
 RUN apt-get update && \
-    apt-get install -y build-essential iputils-ping openssh-server && \
+    apt-get install -y build-essential iputils-ping iproute2 openssh-server && \
     rm -rf /var/lib/apt/lists/*
 
 # Configure SSH

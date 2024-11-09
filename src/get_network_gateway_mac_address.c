@@ -17,7 +17,7 @@ int get_network_gateway_mac_address(t_ping *ping)
         return -1;
     }
 
-    printf("ping->gateway_ip %s\n ", ping->gateway_ip);
+    printf("get_network_gateway_mac_address ping->gateway_ip %s\n ", ping->gateway_ip);
 
     // Gateway IP adresini yapılandır
     addr.sin_family = AF_INET;

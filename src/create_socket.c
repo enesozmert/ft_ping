@@ -2,6 +2,8 @@
 
 int create_socket(t_ping *ping)
 {
+    t_ping_func_entry *functions;
+
     create_raw_socket(ping);
     printf("enes \n");
 
@@ -52,7 +54,7 @@ int create_socket(t_ping *ping)
         return 1;
     }
 
-    t_ping_func_entry *functions = ping_create_functions();
+    functions = ping_create_functions();
     run_ping_create_functions(ping, functions, 10);
 
     close(ping->sock_fd);
