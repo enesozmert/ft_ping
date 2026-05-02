@@ -364,27 +364,34 @@ re: fclean all
 
 ## Slayt 20 — Soru-Cevap (Q&A)
 
-> **Sık sorulan defense soruları:**
+> **Sık sorulan defense soruları** — özet aşağıda; her madde için
+> detaylı dokümantasyon [`qa/`](qa/) klasöründe.
 
-1. *Raw socket nedir, niçin gerekiyor?*
-   → ICMP, transport layer **dışında**dır. Kernel’ın TCP/UDP gibi
-   açacağı default socket bunu ele alamaz; `SOCK_RAW` ile **protocol
-   number 1 (ICMP)** doğrudan dinlenir/gönderilir.
+1. *Raw socket nedir, niçin gerekiyor?* → [`qa/01-raw-socket.md`](qa/01-raw-socket.md)
+   ICMP transport layer **dışında**dır. Kernel’ın TCP/UDP gibi açacağı
+   default socket bunu ele alamaz; `SOCK_RAW` + `IPPROTO_ICMP` ile
+   doğrudan dinlenir/gönderilir. **`CAP_NET_RAW`** capability gerekir.
 
-2. *Checksum nasıl hesaplanır?*
-   → RFC 1071: 16-bit chunk’lar over **1’s complement sum**, sonra
-   sonucun complement’i. Detay: `src/checksum.c`.
+2. *Checksum nasıl hesaplanır?* → [`qa/02-checksum.md`](qa/02-checksum.md)
+   RFC 1071: 16-bit chunk’lar üzerinde **1’s complement sum**, carry
+   geri eklenir, sonucun **bit-wise NOT**'u yazılır. ICMP pseudo-header
+   kullanmaz — sadece header + payload üzerinde hesap. Detay:
+   `src/checksum.c`.
 
-3. *RTT nasıl hesaplanıyor?*
-   → Paketin payload’ına gönderim anında `gettimeofday()` yazılır;
-   reply alındığında fark hesaplanır.
+3. *RTT nasıl hesaplanıyor?* → [`qa/03-rtt-calculation.md`](qa/03-rtt-calculation.md)
+   `gettimeofday()` ile gönderim anı (`T0`) ve reply anı (`T1`) alınır,
+   `(T1 - T0)` ms olarak yazılır. Statistics: `min/avg/max/mdev`
+   (variance √).
 
-4. *Niye getaddrinfo, gethostbyname değil?*
-   → `gethostbyname` deprecated; `getaddrinfo` reentrant + IPv6-ready.
+4. *Niçin `getaddrinfo`, `gethostbyname` değil?* → [`qa/04-getaddrinfo-vs-gethostbyname.md`](qa/04-getaddrinfo-vs-gethostbyname.md)
+   `gethostbyname` POSIX-2001'de **deprecated**; static buffer +
+   non-reentrant + IPv4-only. `getaddrinfo` reentrant, IPv6-ready,
+   thread-safe `gai_strerror`, family-agnostic.
 
-5. *DNS resolution paket dönüşünde niye yapılmıyor?*
-   → Subject (R-02) açıkça yasaklıyor; ayrıca lookup latency RTT
-   ölçümünü bozar.
+5. *DNS resolution paket dönüşünde niçin yapılmıyor?* → [`qa/05-dns-resolution-policy.md`](qa/05-dns-resolution-policy.md)
+   Subject Chapter IV açıkça yasaklıyor; ayrıca **reverse DNS lookup
+   latency**'si RTT ölçümünü bozar ve PTR records çoğunlukla NXDOMAIN
+   ile sonuçlanır (extra timeout).
 
 ---
 
