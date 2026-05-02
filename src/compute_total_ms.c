@@ -1,22 +1,24 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   parse_args.h                                       :+:      :+:    :+:   */
+/*   compute_total_ms.c                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: ozmerte <ozmerte@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/05/01 20:57:28 by ozmerte          #+#    #+#             */
-/*   Updated: 2026/05/01 20:57:28 by ozmerte         ###   ########.fr       */
+/*   Created: 2026/05/02 00:00:00 by ozmerte          #+#    #+#             */
+/*   Updated: 2026/05/02 00:00:00 by ozmerte         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef PARSE_ARGS_H
-# define PARSE_ARGS_H
+#include "header.h"
 
-# include <stdlib.h>
-# include <unistd.h>
-# include <getopt.h>
+long	compute_total_ms(const struct timeval *start)
+{
+	struct timeval	now;
+	long			ms;
 
-void	parse_args(int argc, char *argv[], int *verbose_flag);
-
-#endif /* PARSE_ARGS_H */
+	gettimeofday(&now, NULL);
+	ms = (now.tv_sec - start->tv_sec) * 1000L;
+	ms += (now.tv_usec - start->tv_usec) / 1000L;
+	return (ms);
+}

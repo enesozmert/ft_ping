@@ -1,66 +1,52 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ping_create_allocates.c                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: ozmerte <ozmerte@student.42.fr>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/05/01 20:57:27 by ozmerte          #+#    #+#             */
+/*   Updated: 2026/05/02 00:00:00 by ozmerte         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "header.h"
 
-int ping_create_allocates(t_ping **ping)
+static int	alloc_one(void **dst, size_t size)
 {
-    *ping = malloc(sizeof(t_ping));  // ping işaretçisinin içeriğini ayırıyoruz
-    if (!*ping)
-    {
-        perror("Failed to allocate memory for t_ping");
-        return -1;
-    }
+	*dst = malloc(size);
+	if (!*dst)
+		return (-1);
+	memset(*dst, 0, size);
+	return (0);
+}
 
-    (*ping)->result = malloc(sizeof(t_ping_result));  // ping işaretçisinin içeriğini dereference edip ayırıyoruz
-    if (!(*ping)->result)
-    {
-        perror("Failed to allocate memory for t_ping_result");
-        free(*ping);  // Ayırılan belleği serbest bırakıyoruz
-        return -1;
-    }
+static void	free_ping_chain(t_ping *p)
+{
+	if (!p)
+		return ;
+	free(p->payload);
+	free(p->packet);
+	free(p->target_addr);
+	free(p->result);
+	free(p);
+}
 
-    (*ping)->target_addr = (struct sockaddr_ll *)malloc(sizeof(struct sockaddr_ll));
-    if (!(*ping)->target_addr)
-    {
-        perror("Memory Allocation Error for target_addr!");
-        free((*ping)->result);  // Dinamik bellekleri serbest bırakıyoruz
-        free(*ping);
-        return -1;
-    }
-
-    (*ping)->ifreq = (struct ifreq *)malloc(sizeof(struct ifreq));
-    if (!(*ping)->ifreq)
-    {
-        perror("Failed to allocate memory for ifreq");
-        close((*ping)->sock_fd);
-        free((*ping)->target_addr);
-        free((*ping)->result);
-        free(*ping);
-        return -1;
-    }
-
-    (*ping)->packet = (t_packet *)malloc(sizeof(t_packet));
-    if (!(*ping)->packet)
-    {
-        perror("Failed to allocate memory for t_packet");
-        close((*ping)->sock_fd);
-        free((*ping)->ifreq);
-        free((*ping)->target_addr);
-        free((*ping)->result);
-        free(*ping);
-        return -1;
-    }
-
-    (*ping)->payload = (t_payload *)malloc(sizeof(t_payload));
-    if (!(*ping)->payload)
-    {
-        perror("Failed to allocate memory for t_payload");
-        close((*ping)->sock_fd);
-        free((*ping)->packet);
-        free((*ping)->ifreq);
-        free((*ping)->target_addr);
-        free((*ping)->result);
-        free(*ping);
-        return -1;
-    }
-
-    return 1;
+int	ping_create_allocates(t_ping **ping)
+{
+	*ping = malloc(sizeof(t_ping));
+	if (!*ping)
+		return (-1);
+	memset(*ping, 0, sizeof(t_ping));
+	if (alloc_one((void **)&(*ping)->result, sizeof(t_ping_result)) < 0
+		|| alloc_one((void **)&(*ping)->target_addr,
+			sizeof(struct sockaddr_in)) < 0
+		|| alloc_one((void **)&(*ping)->packet, sizeof(t_packet)) < 0
+		|| alloc_one((void **)&(*ping)->payload, sizeof(t_payload)) < 0)
+	{
+		free_ping_chain(*ping);
+		*ping = NULL;
+		return (-1);
+	}
+	return (1);
 }
