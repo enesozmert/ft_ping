@@ -132,7 +132,7 @@
 - ✅ T-406 — `make all && make test` container içinde sorunsuz (4/4 smoke test OK)
 - ✅ T-407 — `setcap` container içinde mevcut (libcap2-bin yüklü)
 - ✅ T-408 — Make + CMake + CTest container ortamında doğrulandı (alternative: WSL2 dış)
-- ⚠ T-409 — macOS portability: `struct iphdr/icmphdr` Linux-only; BSD `struct ip/icmp` desteği için accessor macros gerekir (deep refactor, scope dışı)
+- ✅ T-409 — macOS portability: POSIX-portable wire-format struct'lar (`t_iphdr`, `t_icmphdr`) + `<getopt.h>` kaldırıldı; tüm header'lar POSIX/C11. Linux'ta build/test temiz; macOS'ta build edilebilir (gerçek test ortam gerektirir).
 - ✅ T-410 — `CMakeLists.txt` mevcut (paralel build + IDE entegrasyonu)
 - ✅ T-411 — Makefile’da `norm / cppcheck / misra / test / valgrind / asan` target’ları
 - ✅ T-412 — CMake’de `norm / cppcheck / misra / check / valgrind` custom target’ları
@@ -228,7 +228,7 @@
 | 1 — Subject Mandatory        | 25 / 25             | 100  |
 | 2 — Hata Yönetimi            | 11 / 11             | 100  |
 | 3 — Kalite Denetimi          | 22 / 22             | 100  |
-| 4 — Geliştirme Ortamı        | 13 / 14             | 93   |
+| 4 — Geliştirme Ortamı        | 14 / 14             | 100  |
 | 5 — Test & Doğrulama         | 13 / 13             | 100  |
 | 6 — Dokümantasyon            | 9 / 10              | 90   |
 | 7 — Bonus                    | 0 / 12              | 0    |

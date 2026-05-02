@@ -18,8 +18,8 @@ void	print_ping_banner(const t_ping *ping)
 	int	wire_size;
 
 	payload_size = ping->payload->payload_size;
-	wire_size = payload_size + (int) sizeof(struct iphdr)
-		+ (int) sizeof(struct icmphdr);
+	wire_size = payload_size + (int) sizeof(t_iphdr)
+		+ (int) sizeof(t_icmphdr);
 	printf("PING %s (%s) %d(%d) bytes of data",
 		ping->dest_hostname, ping->dest_ip_addr,
 		payload_size, wire_size);
@@ -32,11 +32,11 @@ static void	refresh_icmp_header(t_ping *ping)
 {
 	ping->icmp_header->type = ICMP_ECHO;
 	ping->icmp_header->code = 0;
-	ping->icmp_header->un.echo.id = htons(getpid() & 0xFFFF);
-	ping->icmp_header->un.echo.sequence = htons(ping->seq);
+	ping->icmp_header->id = htons(getpid() & 0xFFFF);
+	ping->icmp_header->sequence = htons(ping->seq);
 	ping->icmp_header->checksum = 0;
 	ping->icmp_header->checksum = checksum(ping->icmp_header,
-			sizeof(struct icmphdr) + ping->payload->payload_size);
+			sizeof(t_icmphdr) + ping->payload->payload_size);
 }
 
 static int	send_one(t_ping *ping)

@@ -19,6 +19,9 @@
 # ifndef _GNU_SOURCE
 #  define _GNU_SOURCE
 # endif
+# ifndef _DARWIN_C_SOURCE
+#  define _DARWIN_C_SOURCE
+# endif
 
 # include <stdio.h>
 # include <stdlib.h>
@@ -28,15 +31,50 @@
 # include <sys/types.h>
 # include <sys/socket.h>
 # include <arpa/inet.h>
-# include <netinet/ip.h>
-# include <netinet/ip_icmp.h>
 # include <netinet/in.h>
 # include <errno.h>
 # include <stdint.h>
 # include <sys/time.h>
 # include <netdb.h>
 # include <sys/select.h>
-# include <getopt.h>
+
+/*
+ * POSIX-portable wire-format structs (Linux iphdr/icmphdr & BSD ip/icmp
+ * agnostic). Layout matches RFC 791 (IP) and RFC 792 (ICMP) on the wire,
+ * so both Linux raw socket reads and macOS/BSD reads parse correctly.
+ */
+# ifndef IPPROTO_ICMP
+#  define IPPROTO_ICMP 1
+# endif
+# ifndef ICMP_ECHO
+#  define ICMP_ECHO 8
+# endif
+# ifndef ICMP_ECHOREPLY
+#  define ICMP_ECHOREPLY 0
+# endif
+
+typedef struct s_iphdr
+{
+	uint8_t		vhl;
+	uint8_t		tos;
+	uint16_t	tot_len;
+	uint16_t	id;
+	uint16_t	frag_off;
+	uint8_t		ttl;
+	uint8_t		protocol;
+	uint16_t	check;
+	uint32_t	saddr;
+	uint32_t	daddr;
+}	t_iphdr;
+
+typedef struct s_icmphdr
+{
+	uint8_t		type;
+	uint8_t		code;
+	uint16_t	checksum;
+	uint16_t	id;
+	uint16_t	sequence;
+}	t_icmphdr;
 
 typedef struct s_payload
 {
@@ -74,7 +112,7 @@ typedef struct s_ping
 	fd_set				read_fds;
 	char				*dest_ip_addr;
 	char				*dest_hostname;
-	struct icmphdr		*icmp_header;
+	t_icmphdr			*icmp_header;
 	struct sockaddr_in	*target_addr;
 	t_payload			*payload;
 	t_packet			*packet;
@@ -120,6 +158,8 @@ void				parse_args(int argc, char *argv[], int *verbose_flag);
 double				calculate_rtt(const struct timeval *start,
 						const struct timeval *end);
 long				compute_total_ms(const struct timeval *start);
+double				compute_elapsed_ms(const struct timeval *start,
+						struct timeval *end);
 
 void				interrupt_handler(int sig);
 

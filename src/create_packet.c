@@ -14,7 +14,7 @@
 
 int	create_packet(t_ping *ping)
 {
-	ping->packet->packet_len = sizeof(struct icmphdr)
+	ping->packet->packet_len = sizeof(t_icmphdr)
 		+ ping->payload->payload_size;
 	ping->packet->packet = malloc(ping->packet->packet_len);
 	if (!ping->packet->packet)
@@ -23,7 +23,7 @@ int	create_packet(t_ping *ping)
 		return (-1);
 	}
 	memset(ping->packet->packet, 0, ping->packet->packet_len);
-	memcpy(ping->packet->packet + sizeof(struct icmphdr),
+	memcpy(ping->packet->packet + sizeof(t_icmphdr),
 		ping->payload->payload, ping->payload->payload_size);
 	return (1);
 }

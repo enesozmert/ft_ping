@@ -15,7 +15,6 @@
 
 # include <stdlib.h>
 # include <unistd.h>
-# include <getopt.h>
 
 void	parse_args(int argc, char *argv[], int *verbose_flag);
 

@@ -22,3 +22,13 @@ long	compute_total_ms(const struct timeval *start)
 	ms += (now.tv_usec - start->tv_usec) / 1000L;
 	return (ms);
 }
+
+double	compute_elapsed_ms(const struct timeval *start, struct timeval *end)
+{
+	double	ms;
+
+	gettimeofday(end, NULL);
+	ms = (end->tv_sec - start->tv_sec) * 1000.0;
+	ms += (end->tv_usec - start->tv_usec) / 1000.0;
+	return (ms);
+}
