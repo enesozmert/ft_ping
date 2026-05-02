@@ -216,7 +216,7 @@
 - ✅ T-804 — `inetutils-2.0` ile diff temiz (banner + per-packet + stats birebir)
 - ✅ T-805 — Sunum mevcut (`docs/presentation/presentation.md`, 21 slayt)
 - ✅ T-806 — Q&A bölümü mevcut (sunum slayt 20)
-- ⚠ T-807 — `git status`'ta unstaged changes var (commit bekleniyor; kullanıcı iznine bağlı)
+- ✅ T-807 — `git status` temiz; 3 mantıksal commit (`bc32d32` chore, `03697e3` refactor, `c33eb30` add infra+docs)
 - ✅ T-808 — Kernel `6.6.87.2-microsoft-standard-WSL2` > 3.14
 
 ---
@@ -232,7 +232,7 @@
 | 5 — Test & Doğrulama         | 13 / 13             | 100  |
 | 6 — Dokümantasyon            | 9 / 10              | 90   |
 | 7 — Bonus                    | 0 / 12              | 0    |
-| 8 — Defense Hazırlığı        | 7 / 8               | 88   |
+| 8 — Defense Hazırlığı        | 8 / 8               | 100  |
 
 > Yüzdeler kabaca tahminidir; gerçek durum statik & dinamik analiz
 > sonuçlarına göre güncellenmelidir.
