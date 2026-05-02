@@ -1,0 +1,58 @@
+# =============================================================================
+# ft_ping — docker-compose.yml
+# Subject: Ecole 42 ft_ping v5.1
+# Note: ICMP raw socket için CAP_NET_RAW capability gerekli.
+# =============================================================================
+
+services:
+  ft_ping:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: ft_ping:latest
+    container_name: ft_ping_container
+    hostname: ft-ping
+
+    # ICMP raw socket için zorunlu capability'ler
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+
+    # Linux kernel için ping group range (root olmadan da ICMP'ye izin)
+    sysctls:
+      - net.ipv4.ping_group_range=0 2147483647
+
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+
+    # SSH (development only)
+    ports:
+      - "2222:22"
+
+    # Bind mount: host'taki kaynak kodu container'a canlı bağlar
+    volumes:
+      - ..:/usr/src/ft_ping
+
+    working_dir: /usr/src/ft_ping
+
+    # Ortam değişkenleri (Makefile/CMake değişkenleri override için)
+    environment:
+      - TERM=xterm-256color
+      - LANG=C.UTF-8
+
+    networks:
+      - ft_ping_net
+
+    # Health check — container içinde build chain çalışıyor mu?
+    healthcheck:
+      test: ["CMD-SHELL", "command -v gcc >/dev/null && command -v make >/dev/null"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+networks:
+  ft_ping_net:
+    driver: bridge
+    name: ft_ping_net

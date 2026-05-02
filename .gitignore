@@ -41,4 +41,4 @@ __pycache__/
 *.pyc
 
 # Project-specific
-opt/
+opt/*.txt

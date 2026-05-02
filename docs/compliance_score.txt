@@ -1,0 +1,259 @@
+============================================================
+ B COMPILER - SUBJECT COMPLIANCE SCORE (en.subject.pdf v1.1)
+============================================================
+Date: 2026-04-04
+Binary: ./output/B
+Tests: 46/46 passing + multi-file integration tests
+
+
+============================================================
+ SECTION 1: GENERAL RULES (20 pts)
+============================================================
+
+[2/2] R-G01  C + lex (flex) + yacc (bison)
+             -> lexer.l, parser.y, tum kaynak C                    OK
+
+[2/2] R-G02  Makefile: all/clean/fclean/re + flex/bison auto call
+             -> Makefile mevcut, kurallar dogru, recompile-only     OK
+
+[2/2] R-G03  Binary adi "B"
+             -> output/B uretiliyor, cp ile ./B olarak kullanilir   OK
+
+[2/2] R-G04  stdin/stdout/stderr I/O kanallari
+             -> stdin okuma, stdout assembly, stderr hata           OK
+
+[2/2] R-G05  Syntax-directed translation (AST yok)
+             -> Parser mid-rule action ile dogrudan emit            OK
+
+[2/2] R-G06  Crash olmamali (segfault, bus error, double free)
+             -> 46 test + stres testi gecti, NULL check eklendi     OK
+
+[2/2] R-G07  i386 GNU assembly, Intel syntax
+             -> .intel_syntax noprefix, gcc -m32 ile assemble       OK
+
+[2/2] R-G08  brt0.o runtime kullanimi
+             -> ld -m elf_i386 ... brt0.o ile link                  OK
+
+[2/2] R-G09  Evaluation compile() fonksiyonu calisir
+             -> Multi-file test: hello_world, add, printn OK        OK
+
+[2/2] R-G10  Derlenen .l/.y dosyalari submit (generated C yok)
+             -> .gitignore: obj/, lex.yy.c, y.tab.c haric           OK
+
+             SECTION 1 TOTAL: 20/20
+
+
+============================================================
+ SECTION 2: B LANGUAGE FEATURES - DEFINITIONS (15 pts)
+============================================================
+
+[3/3] R-L02a Simple definition: name; / name ival;
+             -> emit_extern_def, emit_extern_def_init               OK
+             -> name "str"; name othername; de calisiyor             OK
+
+[3/3] R-L02b Vector definition: name[N] ival,...; / name[];
+             -> emit_vector_def_start/value/end                     OK
+             -> name[N]; (sifir init) calisiyor                     OK
+
+[3/3] R-L02c Function definition: name(args) stmt
+             -> Parametreli ve parametresiz fonksiyonlar             OK
+             -> B cell pattern: .long "name" + 4                    OK
+
+[3/3] R-L03a extrn name1, name2;
+             -> sym_add_extrn + lea/mov codegen                     OK
+             -> Multi-file link calisiyor                           OK
+
+[3/3] R-L03b auto name, name N;  (variable + vector)
+             -> push 0, sub esp, lea stack alloc                    OK
+             -> auto v 10; vector offset dogru                      OK
+
+             SECTION 2 TOTAL: 15/15
+
+
+============================================================
+ SECTION 3: STATEMENTS (15 pts)
+============================================================
+
+[2/2] Compound statement: { stmt* }
+      -> stmt_list kuralinda yonetiliyor                            OK
+
+[2/2] if (expr) stmt  /  if (expr) stmt else stmt
+      -> if_labels stack, dangling-else %prec ile cozuldu           OK
+
+[2/2] while (expr) stmt
+      -> Loop label + jump + zero-check                             OK
+
+[2/2] goto label; / label: stmt
+      -> jmp IDENTIFIER, IDENTIFIER: stmt                           OK
+
+[2/2] return; / return(expr); / return expr;
+      -> 3 form da destekleniyor                                    OK
+
+[2/2] Expression statement: expr;
+      -> Herhangi bir ifade statement olabilir                      OK
+
+[1/1] Null statement: ;
+      -> Bos statement destekleniyor                                OK
+
+[2/2] Label statement: name: stmt
+      -> printf("%s:\n", name) + stmt                               OK
+
+             SECTION 3 TOTAL: 15/15
+
+
+============================================================
+ SECTION 4: EXPRESSIONS & OPERATORS (35 pts)
+============================================================
+
+[3/3]  Arithmetic: + - * / %
+       -> emit_add/sub/mul/div/mod, idiv+cdq, edx for mod          OK
+
+[3/3]  Relational: < <= > >=
+       -> cmp + setl/setle/setg/setge + movzx                      OK
+
+[2/2]  Equality: == !=
+       -> cmp + sete/setne + movzx                                  OK
+
+[2/2]  Bitwise: & |
+       -> and eax, ebx / or eax, ebx                                OK
+
+[2/2]  Shift: << >>
+       -> shl eax, cl / shr eax, cl                                 OK
+
+[2/2]  Unary minus: -expr
+       -> neg eax                                                    OK
+
+[2/2]  Logical NOT: !expr
+       -> cmp eax, 0; sete al; movzx eax, al                        OK
+
+[2/2]  Dereference: *rvalue
+       -> mov edx, eax; mov eax, [eax]                              OK
+
+[1/1]  Address-of: &lvalue
+       -> emit_id_addr + pop eax                                     OK
+
+[2/2]  Prefix ++/--
+       -> emit_prefix_inc/dec                                        OK
+
+[2/2]  Postfix ++/--
+       -> emit_postfix_inc/dec (old value returned)                  OK
+
+[3/3]  Simple assignment: lvalue = rvalue
+       -> Named var, subscript, deref lvalue destekleniyor           OK
+
+[3/3]  Compound assignment: =+ =- =* =/ =% =| =& =< => 
+       === =!= =<= =>= =<< =>>  (15 operator)
+       -> emit_compound_load + operator + emit_store                 OK
+
+[2/2]  Ternary: expr ? expr : expr
+       -> Jump-based, nested ternary da calisiyor                    OK
+
+[2/2]  Function call: expr(args)
+       -> Indirect call, arg reverse, nested calls OK                OK
+
+[2/2]  Vector subscript: expr[expr]
+       -> imul eax, 4; add; mov eax, [eax] (4x scaling)             OK
+
+             SECTION 4 TOTAL: 35/35
+
+
+============================================================
+ SECTION 5: CONSTANTS & LITERALS (10 pts)
+============================================================
+
+[2/2]  Decimal constants: 42, 100
+       -> strtol(yytext, NULL, 10)                                   OK
+
+[2/2]  Octal constants: 0777, 012
+       -> strtol(yytext, NULL, 8) (0-prefixed)                      OK
+
+[2/2]  Character literals: 'a', 'ab', '*n'
+       -> pack_char_literal, escape support                          OK
+
+[2/2]  String literals: "hello*n"
+       -> .rodata, B cell, escape conversion                         OK
+
+[2/2]  Comments: /* ... */
+       -> Flex rule ile atlaniyor                                    OK
+
+             SECTION 5 TOTAL: 10/10
+
+
+============================================================
+ SECTION 6: CODE QUALITY (5 pts)
+============================================================
+
+[1/1]  -Wall -Wextra -Werror ile sifir uyari
+       -> gcc strict mode gecti                                      OK
+
+[1/1]  Cppcheck temiz (gercek bulgular duzeltildi)
+       -> knownCondition, variableScope, nullPointer fixed           OK
+
+[1/1]  MISRA C:2012 inceleme yapildi
+       -> NULL check, bounds check, (void) cast eklendi              OK
+
+[1/1]  Multi-file integration testleri geciyor
+       -> hello_world, printn, multi_add calisiyor                   OK
+
+[1/1]  46 birim testi geciyor
+       -> run_tests.sh: 46 passed, 0 failed                         OK
+
+             SECTION 6 TOTAL: 5/5
+
+
+============================================================
+ MANDATORY TOTAL
+============================================================
+
+  Section 1 - General Rules:       20 / 20
+  Section 2 - Definitions:         15 / 15
+  Section 3 - Statements:          15 / 15
+  Section 4 - Expressions:         35 / 35
+  Section 5 - Constants:           10 / 10
+  Section 6 - Code Quality:         5 /  5
+  ----------------------------------------
+  MANDATORY TOTAL:                100 / 100
+
+
+============================================================
+ BONUS (evaluated only if mandatory = 100)
+============================================================
+
+[x] B standard library (putchar, char)
+    -> tests/lib/putchar.b, tests/lib/char.b mevcut                 OK
+
+[ ] switch/case statement
+    -> Implement edilmedi                                            N/A
+
+[ ] Floating point operators
+    -> Implement edilmedi                                            N/A
+
+[ ] Internal declarations (block-scope labels)
+    -> Implement edilmedi (subject "not required" diyor)             N/A
+
+NOTE: Bonus sadece mandatory 100/100 ise degerlendirilir.
+
+
+============================================================
+ SUBJECT EVALUATION TESTS - VERIFICATION
+============================================================
+
+[PASS] Empty main            -> exit 0
+[PASS] Return 42             -> exit 42
+[PASS] Auto variables        -> exit 42
+[PASS] Arithmetic (a+b)      -> exit 7
+[PASS] Subject hello_world   -> "hello, world\n" ciktisi
+[PASS] Subject printn(42,10) -> "42" ciktisi
+[PASS] Multi-file add        -> exit 7 (3+4)
+[PASS] Compound assignment   -> exit 15 (10 =+ 5)
+[PASS] Vector subscript      -> exit 42
+[PASS] Recursive fibonacci   -> exit 55 (fib(10))
+[PASS] Pointer/deref         -> exit 42
+[PASS] Goto/label            -> exit 42
+[PASS] Nested ternary        -> exit 42
+[PASS] Global string         -> exit 65 ('A')
+
+
+============================================================
+ FINAL SCORE:  100 / 100  (Mandatory)
+============================================================

@@ -1,0 +1,36 @@
+# Git
+.git
+.gitignore
+
+# Build artifacts
+obj/
+output/
+build/
+*.o
+*.d
+
+# Analysis
+*.dump
+cppcheck.txt
+misra.txt
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# Docs
+docs/
+*.md
+*.pdf
+LICENSE
+
+# Compose / Docker meta
+docker-compose.override.yml
+
+# Python
+__pycache__/
+*.pyc
