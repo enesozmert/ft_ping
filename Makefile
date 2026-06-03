@@ -24,6 +24,9 @@ OBJDIR  = obj
 HDRDIR  = hdr
 OUTDIR  = output
 TESTDIR = test
+NET_HOST ?= 8.8.8.8
+NET_TIMEOUT ?= 5s
+CONTAINER ?= ft_ping_container
 
 # ---------------------------------------------------------------------------
 # Project name & files
@@ -41,6 +44,10 @@ all: $(NAME)
 $(NAME): $(OBJS)
 	@mkdir -p $(OUTDIR)
 	$(CC) $(CFLAGS) -o $(NAME) $(OBJS) -lm
+	@# Try to apply CAP_NET_RAW automatically (non-fatal if unavailable)
+	@if command -v setcap >/dev/null 2>&1; then \
+		setcap cap_net_raw+ep $(NAME) >/dev/null 2>&1 || true; \
+	fi
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
 	$(CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
@@ -159,6 +166,35 @@ test: $(NAME)
 		done; \
 	fi
 
+test-net: $(NAME)
+	@echo "==> ft_ping network test ($(NET_HOST))"
+	@if [ "$$(id -u)" -ne 0 ] && ! (command -v getcap >/dev/null 2>&1 && getcap $(NAME) | grep -q cap_net_raw); then \
+		echo "  CAP_NET_RAW not set, trying to apply..."; \
+		if command -v sudo >/dev/null 2>&1 && sudo -n true >/dev/null 2>&1; then \
+			sudo -n setcap cap_net_raw+ep $(NAME) >/dev/null 2>&1 || true; \
+		fi; \
+	fi
+	@if [ "$$(id -u)" -ne 0 ] && ! (command -v getcap >/dev/null 2>&1 && getcap $(NAME) | grep -q cap_net_raw); then \
+		echo "  FAIL: root/CAP_NET_RAW gerekli (container root ile çalıştır veya bir kez: sudo setcap cap_net_raw+ep $(NAME))"; \
+		exit 1; \
+	fi
+	@timeout -s INT $(NET_TIMEOUT) $(NAME) $(NET_HOST) >/tmp/ft_ping_net_test.log 2>&1 || true
+	@if grep -Eq "bytes from|icmp_seq|ttl=" /tmp/ft_ping_net_test.log; then \
+		echo "  OK"; \
+	else \
+		echo "  FAIL (çıktı: /tmp/ft_ping_net_test.log)"; \
+		tail -n 20 /tmp/ft_ping_net_test.log || true; \
+		exit 1; \
+	fi
+
+test-net-docker:
+	@echo "==> ft_ping network test in container ($(CONTAINER))"
+	@docker ps --format '{{.Names}}' | grep -qx "$(CONTAINER)" || { \
+		echo "  Container not running. Start first: docker compose -f docker/docker-compose.yml up -d"; \
+		exit 1; \
+	}
+	@docker exec -i $(CONTAINER) bash -lc "cd /usr/src/ft_ping && make --no-print-directory test-net NET_HOST='$(NET_HOST)' NET_TIMEOUT='$(NET_TIMEOUT)'"
+
 # ---------------------------------------------------------------------------
 # Valgrind — memory leak / invalid access (requires sudo for ICMP)
 # ---------------------------------------------------------------------------
@@ -227,6 +263,8 @@ help:
 	@echo ""
 	@echo "  Test:"
 	@echo "    test         Smoke tests (CLI/exit-code)"
+	@echo "    test-net     Network test (auto CAP_NET_RAW prepare)"
+	@echo "    test-net-docker  Network test inside container (no local sudo)"
 	@echo "    valgrind     Run under valgrind (VALGRIND_HOST=...)"
 	@echo "    asan         Rebuild with AddressSanitizer"
 	@echo "    diff-ref     Diff against system ping (DIFF_HOST=...)"
@@ -240,6 +278,6 @@ help:
 # ---------------------------------------------------------------------------
 .PHONY: all clean fclean re run setcap \
         norm cppcheck misra strict \
-        test valgrind asan \
+	test test-net test-net-docker valgrind asan \
         cmake-build cmake-clean \
         diff-ref help
