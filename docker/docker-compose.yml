@@ -18,9 +18,9 @@ services:
       - NET_RAW
       - NET_ADMIN
 
-    # Linux kernel için ping group range (root olmadan da ICMP'ye izin)
+    # Linux kernel için ping group range (daha geniş uyumluluk için 0-65535)
     sysctls:
-      - net.ipv4.ping_group_range=0 2147483647
+      net.ipv4.ping_group_range: "0 65535"
 
     stdin_open: true
     tty: true

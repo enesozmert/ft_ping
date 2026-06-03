@@ -95,7 +95,7 @@ services:
       - NET_RAW
       - NET_ADMIN
     sysctls:
-      - net.ipv4.ping_group_range=0 2147483647
+      - net.ipv4.ping_group_range=0 65535
     stdin_open: true
     tty: true
     volumes:
@@ -208,6 +208,7 @@ network_mode: host  # Linux host'ta çalışır, Docker Desktop'ta değil
 |---------------------------------------------------|----------------------------------------------------|
 | `socket: Operation not permitted`                 | `cap_add: [NET_RAW]` ekle                          |
 | `bind: Cannot assign requested address`           | Container network’ünü kontrol et                   |
+| `write /proc/sys/net/ipv4/ping_group_range: invalid argument` | `ping_group_range` değerini `0 65535` yap          |
 | `setcap: command not found`                       | `apt-get install -y libcap2-bin`                   |
 | `make: command not found`                         | Dockerfile’da `build-essential` yüklenmiş mi?      |
 | `Cannot connect to the Docker daemon`             | Docker Desktop / `systemctl start docker` çalışıyor mu? |
